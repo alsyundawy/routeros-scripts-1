@@ -6,7 +6,7 @@
 
 # Make sure all configuration properties are up to date and this
 # value is in sync with value in script 'global-functions'!
-:global GlobalConfigVersion 6;
+:global GlobalConfigVersion 9;
 
 # This is used for DNS and backup file.
 :global Domain "example.com";
@@ -43,6 +43,14 @@
 # The configured channel (bugfix, current, release-candidate) is appended.
 :global SafeUpdateUrl "";
 #:global SafeUpdateUrl "https://example.com/ros/safe-update/";
+
+# These thresholds control when to send notification on temperature.
+:global CheckHealthTemperature {
+  temperature=50;
+  cpu-temperature=70;
+  board-temperature1=50;
+  board-temperature2=50;
+}
 
 # This controls what configuration is activated by bridge-port-to-default.
 :global BridgePortTo "default";
@@ -92,14 +100,21 @@
 
 # Enable this to fetch scripts from given url.
 :global ScriptUpdatesFetch true;
-:global ScriptUpdatesBaseUrl "https://git.eworm.de/cgit.cgi/routeros-scripts/plain/";
+:global ScriptUpdatesBaseUrl "https://git.eworm.de/cgit/routeros-scripts/plain/";
 #:global ScriptUpdatesBaseUrl "https://raw.githubusercontent.com/eworm-de/routeros-scripts/master/";
 #:global ScriptUpdatesBaseUrl "https://gitlab.com/eworm-de/routeros-scripts/raw/master/";
 :global ScriptUpdatesUrlSuffix "";
 :global ScriptUpdatesIgnore {
   "global-config"
 }
+# Enable this to silence all configuration warnings.
 :global ScriptUpdatesConfigChangesIgnore false;
+# This project is developed in private spare time and usage is free of charge
+# for you. If you like the scripts and think this is of value for you or your
+# business please consider a donation:
+# https://git.eworm.de/cgit/routeros-scripts/about/#donate
+# Enable this to silence donation hint.
+:global IDonate false;
 
 # Use this for certificate auto-renew
 :global CertRenewUrl "";

@@ -26,7 +26,7 @@ Initial setup
 
 If you know how things work just copy and paste the
 [initial commands](initial-commands). Remember to edit and rerun
-`global-config`!
+`global-config-overlay`!
 First time useres should take the long way below.
 
 ### Live presentation
@@ -43,7 +43,7 @@ download the certificates. If you intend to download the scripts from a
 different location (for example from github.com) install the corresponding
 certificate chain.
 
-    [admin@MikroTik] > / tool fetch "https://git.eworm.de/cgit.cgi/routeros-scripts/plain/certs/Let%27s%20Encrypt%20Authority%20X3.pem" dst-path="letsencrypt.pem"
+    [admin@MikroTik] > / tool fetch "https://git.eworm.de/cgit/routeros-scripts/plain/certs/Let%27s%20Encrypt%20Authority%20X3.pem" dst-path="letsencrypt.pem"
           status: finished
       downloaded: 3KiBC-z pause]
            total: 3KiB
@@ -85,19 +85,18 @@ crap and a good example how to *not* do it.
 
 Now let's download the main scripts and add them in configuration on the fly.
 
-    [admin@MikroTik] > :foreach Script in={ "global-config"; "global-functions"; "script-updates" } do={ / system script add name=$Script source=([ / tool fetch check-certificate=yes-without-crl ("https://git.eworm.de/cgit.cgi/routeros-scripts/plain/" . $Script) output=user as-value]->"data"); }
+    [admin@MikroTik] > :foreach Script in={ "global-config"; "global-config-overlay"; "global-functions"; "script-updates" } do={ / system script add name=$Script source=([ / tool fetch check-certificate=yes-without-crl ("https://git.eworm.de/cgit/routeros-scripts/plain/" . $Script) output=user as-value]->"data"); }
 
 The configuration needs to be tweaked for your needs. Make sure not to send
-your mails to `mail@example.com`!
+your mails to `mail@example.com`! Edit `global-config-overlay`, copy
+configuration from `global-config`.
 
-    [admin@MikroTik] > / system script edit global-config source
+    [admin@MikroTik] > / system script edit global-config-overlay source
 
-And finally load configuration and functions and add the schedulers.
+And finally load configuration and functions and add the scheduler.
 
-    [admin@MikroTik] > / system script run global-config
-    [admin@MikroTik] > / system script run global-functions
-    [admin@MikroTik] > / system scheduler add name=global-config start-time=startup on-event=global-config
-    [admin@MikroTik] > / system scheduler add name=global-functions start-time=startup on-event=global-functions
+    [admin@MikroTik] > / system script { run global-config; run global-config-overlay; run global-functions; }
+    [admin@MikroTik] > / system scheduler add name="global-scripts" start-time=startup on-event="/ system script { run global-config; run global-config-overlay; run global-functions; }"
 
 Updating scripts
 ----------------
@@ -112,7 +111,7 @@ Adding a script
 To add a script from the repository create a configuration item first, then
 update scripts to fetch the source.
 
-    [admin@MikroTik] > / system script add name=check-routeros-update
+    [admin@MikroTik] > / system script add name="check-routeros-update"
     [admin@MikroTik] > / system script run script-updates
 
 Scheduler and events
@@ -123,26 +122,46 @@ Most scripts are designed to run regularly from
 added `check-routeros-update`, so let's run it every hour to make sure not to
 miss an update.
 
-    [admin@MikroTik] > / system scheduler add name=check-routeros-update interval=1h on-event=check-routeros-update
+    [admin@MikroTik] > / system scheduler add name="check-routeros-update" interval=1h on-event="/ system script run check-routeros-update;"
 
 Some events can run a script. If you want your DHCP hostnames to be available
 in DNS use `dhcp-to-dns` with the events from dhcp server. For a regular
 cleanup add a scheduler entry.
 
-    [admin@MikroTik] > / system script add name=dhcp-to-dns
+    [admin@MikroTik] > / system script add name="dhcp-to-dns"
     [admin@MikroTik] > / system script run script-updates
     [admin@MikroTik] > / ip dhcp-server set lease-script=dhcp-to-dns [ find ]
-    [admin@MikroTik] > / system scheduler add name=dhcp-to-dns interval=5m on-event=dhcp-to-dns
+    [admin@MikroTik] > / system scheduler add name="dhcp-to-dns" interval=5m on-event="/ system script run dhcp-to-dns;"
 
 There's much more to explore... Have fun!
 
-### Upstream
+## Contribute
+
+Thanks a lot for [past contributions](CONTRIBUTIONS.md)!
+
+### Patches, issues and whishlist
+
+Feel free to contact me via e-mail or open an
+[issue at github](https://github.com/eworm-de/routeros-scripts/issues).
+
+### Donate
+
+This project is developed in private spare time and usage is free of charge
+for you. If you like the scripts and think this is of value for you or your
+business please consider to
+[donate with PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=A4ZXBD6YS2W8J).
+
+[![donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=A4ZXBD6YS2W8J)
+
+Thanks a lot for your support!
+
+## Upstream
 
 URL:
 [GitHub.com](https://github.com/eworm-de/routeros-scripts#routeros-scripts)
 
 Mirror:
-[eworm.de](https://git.eworm.de/cgit.cgi/routeros-scripts/about/)
+[eworm.de](https://git.eworm.de/cgit/routeros-scripts/about/)
 [GitLab.com](https://gitlab.com/eworm-de/routeros-scripts#routeros-scripts)
 
 ---

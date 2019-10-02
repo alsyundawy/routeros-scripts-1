@@ -1,11 +1,12 @@
 #!rsc
 # RouterOS script: global-functions
 # Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+#                         Michael Gisbers <michael@gisbers.de>
 #
 # global functions
 
 # expected configuration version
-:global ExpectedConfigVersion 6;
+:global ExpectedConfigVersion 9;
 
 # global variables not to be changed by user
 :global SentConfigChangesNotification "-";
@@ -293,4 +294,42 @@
   :global GetRandom;
 
   :delay ([ $GetRandom $1 ] . "s");
+}
+
+# get readable device info
+:global DeviceInfo do={
+  :global ExpectedConfigVersion;
+  :global GlobalConfigVersion;
+  :global Identity;
+
+  :local BoardName [ / system resource get board-name ];
+  :local RouterBoard [ / system routerboard get ];
+  :local Update [ / system package update get ];
+
+  :local Info ( \
+    "Hostname:       " . $Identity . "\n" . \
+    "Board name:     " . $BoardName);
+  :if ($RouterBoard->"routerboard" = true) do={
+    :set Info ($Info . "\n" . \
+      "Model:          " . $RouterBoard->"model" . "\n" . \
+      "Serial number:  " . $RouterBoard->"serial-number");
+  }
+  :set Info ($Info . "\n" . \
+    "RouterOS:\n" . \
+    "  Channel:      " . $Update->"channel" . "\n" . \
+    "  Installed:    " . $Update->"installed-version");
+  :if ([ :typeof ($Update->"latest-version") ] != "nothing" && \
+       $Update->"installed-version" != $Update->"latest-version") do={
+    :set Info ($Info . "\n" . \
+      "  Available:    " . $Update->"latest-version");
+  }
+  :set Info ($Info . "\n" . \
+      "RouterOS-Scripts Configuration Version:\n" . \
+      "  Current:      " . $GlobalConfigVersion);
+  :if ($GlobalConfigVersion != $ExpectedConfigVersion) do={
+    :set Info ($Info . "\n" . \
+      "  Expected:     " . $ExpectedConfigVersion);
+  }
+
+  :return $Info;
 }
