@@ -1,17 +1,18 @@
 #!rsc
 # RouterOS script: sms-forward
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # forward SMS to e-mail
 
 :global Identity;
 
+:global LogPrintExit;
+:global MailServerIsUp;
 :global SendNotification;
 
 # check mail server
-:if ([ / tool netwatch get [ find where comment=[ / tool e-mail get address ] ] status ] != "up") do={
-  :log warning "Mail server is not up.";
-  :error "Warning: See log for details.";
+:if ($MailServerIsUp = false) do={
+  $LogPrintExit warning "Mail server is not up." true;
 }
 
 :local Settings [ / tool sms get ];

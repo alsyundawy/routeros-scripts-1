@@ -1,15 +1,18 @@
 #!rsc
 # RouterOS script: check-certificates
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # check for certificate validity
 
-:global Identity;
-:global CertRenewUrl;
 :global CertRenewPass;
+:global CertRenewUrl;
+:global Identity;
 
+:global CertificateNameByCN;
+:global LogPrintExit;
 :global ParseKeyValueStore;
 :global SendNotification;
+:global TimeIsSync;
 :global UrlEncode;
 :global WaitForFile;
 
@@ -18,13 +21,16 @@
   :return [ $CharacterReplace [ $CharacterReplace [ :tostr $1 ] "w" "w " ] "d" "d " ];
 }
 
+:if ($TimeIsSync = false) do={
+  $LogPrintExit warning "Time is not yet synchronized." true;
+}
+
 :foreach Cert in=[ / certificate find where !revoked !ca expires-after<3w ] do={
   :local CertVal [ / certificate get $Cert ];
 
   :do {
     :if ([ :len $CertRenewUrl ] = 0) do={
-      :log info "No CertRenewUrl given.";
-      :error "No CertRenewUrl given.";
+      $LogPrintExit warning "No CertRenewUrl given." true;
     }
 
     :foreach Type in={ ".pem"; ".p12" } do={
@@ -37,8 +43,12 @@
           / certificate import file-name=$CertFileName passphrase=$PassPhrase;
         }
         / file remove [ find where name=$CertFileName ];
+
+        :foreach CertInChain in=[ / certificate find where name~("^" . $CertFileName . "_[0-9]+\$") common-name!=($CertVal->"common-name") ] do={
+          $CertificateNameByCN [ / certificate get $CertInChain common-name ];
+        }
       } on-error={
-        :log debug ("Could not download certificate file " . $CertFileName);
+        $LogPrintExit debug ("Could not download certificate file " . $CertFileName) false;
       }
     }
 
@@ -46,7 +56,7 @@
     :local CertNewVal [ / certificate get $CertNew ];
 
     :if ($Cert != $CertNew) do={
-      :log debug ("Certificate '" . $CertVal->"name" . "' was not updated, but replaced.");
+      $LogPrintExit debug ("Certificate '" . $CertVal->"name" . "' was not updated, but replaced.") false;
 
       / ip service set certificate=($CertNewVal->"name") [ find where certificate=($CertVal->"name") ];
 
@@ -54,13 +64,13 @@
         / ip ipsec identity set certificate=($CertNewVal->"name") [ / ip ipsec identity find where certificate=($CertVal->"name") ];
         / ip ipsec identity set remote-certificate=($CertNewVal->"name") [ / ip ipsec identity find where remote-certificate=($CertVal->"name") ];
       } on-error={
-        :log debug ("Setting IPSEC certificates failed. Package 'security' not installed?");
+        $LogPrintExit debug ("Setting IPSEC certificates failed. Package 'security' not installed?") false;
       }
 
       :do {
         / ip hotspot profile set ssl-certificate=($CertNewVal->"name") [ / ip hotspot profile find where ssl-certificate=($CertVal->"name") ];
       } on-error={
-        :log debug ("Setting hotspot certificates failed. Package 'hotspot' not installed?");
+        $LogPrintExit debug ("Setting hotspot certificates failed. Package 'hotspot' not installed?") false;
       }
 
       / certificate remove $Cert;
@@ -75,9 +85,9 @@
         "Issuer:      " . ([ $ParseKeyValueStore ($CertNewVal->"issuer") ]->"CN") . "\n" . \
         "Validity:    " . ($CertNewVal->"invalid-before") . " to " . ($CertNewVal->"invalid-after") . "\n" . \
         "Expires in:  " . [ $FormatExpire ($CertNewVal->"expires-after") ]) "" "true";
-    :log info ("The certificate " . ($CertVal->"name") . " has been renewed.");
+    $LogPrintExit info ("The certificate " . ($CertVal->"name") . " has been renewed.") false;
   } on-error={
-    :log debug ("Could not renew certificate " . ($CertVal->"name") . ".");
+    $LogPrintExit debug ("Could not renew certificate " . ($CertVal->"name") . ".") false;
   }
 }
 
@@ -99,6 +109,6 @@
       "Issuer:      " . ($CertVal->"ca") . ([ $ParseKeyValueStore ($CertVal->"issuer") ]->"CN") . "\n" . \
       "Validity:    " . ($CertVal->"invalid-before") . " to " . ($CertVal->"invalid-after") . "\n" . \
       "Expires in:  " . $ExpiresAfter);
-  :log warning ("The certificate " . ($CertVal->"name") . " " . $State . \
-      ", it is invalid after " . ($CertVal->"invalid-after") . ".");
+  $LogPrintExit warning ("The certificate " . ($CertVal->"name") . " " . $State . \
+      ", it is invalid after " . ($CertVal->"invalid-after") . ".") false;
 }

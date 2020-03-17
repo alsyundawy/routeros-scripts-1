@@ -1,15 +1,16 @@
 #!rsc
 # RouterOS script: lease-script
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # run scripts on DHCP lease
+
+:global LogPrintExit;
 
 :if ([ :typeof $leaseActIP ] = "nothing" || \
      [ :typeof $leaseActMAC ] = "nothing" || \
      [ :typeof $leaseServerName ] = "nothing" || \
      [ :typeof $leaseBound ] = "nothing") do={
-  :log error "This script is supposed to run from ip dhcp-client.";
-  :error "Error: See log for details.";
+  $LogPrintExit error "This script is supposed to run from ip dhcp-client." true;
 }
 
 :local Scripts;

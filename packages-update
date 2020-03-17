@@ -1,10 +1,11 @@
 #!rsc
 # RouterOS script: packages-update
-# Copyright (c) 2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2019-2020 Christian Hesse <mail@eworm.de>
 #
 # download packages and reboot for installation
 
 :global DownloadPackage;
+:global LogPrintExit;
 :global ScriptFromTerminal;
 :global ScriptLock;
 
@@ -13,20 +14,17 @@ $ScriptLock "packages-update";
 :local Update [ / system package update get ];
 
 :if ([ :typeof ($Update->"latest-version") ] = "nothing") do={
-  :log warning "Latest version is not known.";
-  :error "Latest version is not known.";
+  $LogPrintExit warning "Latest version is not known." true;
 }
 
 :if ($Update->"installed-version" = $Update->"latest-version") do={
-  :log info ("Version " . $Update->"latest-version" . " is already installed.");
-  :error "No updates available.";
+  $LogPrintExit info ("Version " . $Update->"latest-version" . " is already installed.") true;
 }
 
 :foreach Package in=[ / system package find where !bundle ] do={
   :local PkgName [ / system package get $Package name ];
   if ([ $DownloadPackage $PkgName ($Update->"latest-version") ] = false) do={
-    :log error ("Download for package " . $PkgName . " failed.");
-    :error "Error: See log for details.";
+    $LogPrintExit error ("Download for package " . $PkgName . " failed.") true;
   }
 }
 
@@ -44,13 +42,12 @@ $ScriptLock "packages-update";
     }
   }
 
-  :put "Do you want to (s)chedule reboot instead of (r)eboot now? [s/R]";
+  :put "Do you want to (s)chedule reboot or (r)eboot now? [s/R]";
   :if ([ :terminal inkey timeout=60 ] = 115) do={
     / system scheduler add name="reboot-for-update" start-time=03:00:00 interval=1d \
         on-event=(":global RandomDelay; \$RandomDelay 3600; " . \
         "/ system scheduler remove reboot-for-update; / system reboot;");
-    :log info ("Scheduled reboot for update between 03:00 and 04:00.");
-    :error ("Scheduled reboot.");
+    $LogPrintExit info ("Scheduled reboot for update between 03:00 and 04:00.") true;
   }
 }
 

@@ -1,14 +1,15 @@
 #!rsc
 # RouterOS script: ppp-on-up
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # run scripts on ppp up
+
+:global LogPrintExit;
 
 :local Interface $interface;
 
 :if ([ :typeof $Interface ] = "nothing") do={
-  :log error "This script is supposed to run from ppp on-up script hook.";
-  :error "Error: See log for details.";
+  $LogPrintExit error "This script is supposed to run from ppp on-up script hook." true;
 }
 
 :local IntName [ / interface get $Interface name ];

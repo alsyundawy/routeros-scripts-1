@@ -1,18 +1,18 @@
 #!rsc
 # RouterOS script: gps-track
-# Copyright (c) 2018-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2018-2020 Christian Hesse <mail@eworm.de>
 #
 # track gps data by sending json data to http server
 
-:global Identity;
 :global GpsTrackUrl;
+:global Identity;
 
 :local CoordinateFormat [ /system gps get coordinate-format ];
 :local Gps [ / system gps monitor once as-value ];
 
 if ($Gps->"valid" = true) do={
   :tool fetch check-certificate=yes-without-crl \
-    $GpsTrackUrl keep-result=no \
+    $GpsTrackUrl output=none \
     http-method=post http-header-field="Content-Type: application/json" \
     http-data=("{" . \
       "\"lat\":\"" . ($Gps->"latitude") . "\"," . \

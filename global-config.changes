@@ -1,5 +1,5 @@
 # RouterOS global-config changes
-# Copyright (c) 2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2019-2020 Christian Hesse <mail@eworm.de>
 
 # Changes for global-config to be added to notification on script-updates
 :global GlobalConfigChanges {
@@ -13,4 +13,7 @@
   8="added donation hint and option to silence it";
   9="introduced configuration overlay 'global-config-overlay'";
   10="make health threshold for voltage configurable";
+  11="introduced function '\$ScriptInstallUpdate' to install new and update existing scripts";
+  12="removed '\$ScriptUpdatesConfigChangesIgnore', comment '\$GlobalConfigVersion' in 'global-config-overlay' to disable change notifications";
+  13="configuration for script 'bridge-port-to-default' changed with new syntax in comment";
 };

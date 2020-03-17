@@ -1,16 +1,17 @@
 #!rsc
 # RouterOS script: sms-action
-# Copyright (c) 2018-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2018-2020 Christian Hesse <mail@eworm.de>
 #
 # run action on received SMS
 
 :global SmsAction;
 
+:global LogPrintExit;
+
 :local Action $action;
 
 :if ([ :typeof $Action ] = "nothing") do={
-  :log error "This script is supposed to run from SMS hook with action=...";
-  :error "Error: See log for details.";
+  $LogPrintExit error "This script is supposed to run from SMS hook with action=..." true;
 }
 
 :local Code ($SmsAction->$Action);

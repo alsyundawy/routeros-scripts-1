@@ -1,14 +1,14 @@
 #!rsc
 # RouterOS script: update-tunnelbroker
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #                         Michael Gisbers <michael@gisbers.de>
 
 :global CertificateAvailable;
+:global LogPrintExit;
 :global ParseKeyValueStore;
 
 :if ([ / ip cloud get ddns-enabled ] != true) do={
-  :log error "IP cloud DDNS is not enabled.";
-  :error "Error: See log for details.";
+  $LogPrintExit error "IP cloud DDNS is not enabled." true;
 }
 
 # Get the current ip address from cloud
@@ -28,7 +28,7 @@
     :log info ("Local address changed, sending UPDATE to tunnelbroker! New address: " . $PublicAddress);
     / tool fetch check-certificate=yes-without-crl \
         ("https://ipv4.tunnelbroker.net/nic/update\?hostname=" . $Comment->"id") \
-        user=($Comment->"user") password=($Comment->"pass") keep-result=no;
+        user=($Comment->"user") password=($Comment->"pass") output=none;
     / interface 6to4 set $Interface local-address=$PublicAddress;
   } else={
     :log debug ("All tunnelbroker configuration is up to date for interface " . $InterfaceVal->"name" . ".");

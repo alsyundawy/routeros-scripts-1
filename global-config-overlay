@@ -1,12 +1,13 @@
 #!rsc
 # RouterOS script: global-config-overlay
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # global configuration, custom overlay
 
 # Make sure all configuration properties are up to date and this
 # value is in sync with value in script 'global-functions'!
-:global GlobalConfigVersion 10;
+# Comment or remove to disable change notifications.
+:global GlobalConfigVersion 13;
 
 # The global-config script is updated by script-updates,
 # global-config-overlay becomes an overlay for your changes.
@@ -16,3 +17,5 @@
 
 # Copy configuration from global-config here and modify it.
 
+
+# End of global-config-overlay

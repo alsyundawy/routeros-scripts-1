@@ -1,17 +1,19 @@
 #!rsc
 # RouterOS script: rotate-ntp
-# Copyright (c) 2013-2019 Christian Hesse <mail@eworm.de>
+# Copyright (c) 2013-2020 Christian Hesse <mail@eworm.de>
 #
 # rotate the ntp servers
 
 :global NtpPool;
 
+:global LogPrintExit;
+
 :local Ntp1 [ :resolve ("0." . $NtpPool) ];
 :local Ntp2 [ :resolve ("1." . $NtpPool) ];
 
 :if ([ / system ntp client get enabled ] != true) do={
-  :log warning "NTP client is not enabled!";
+  $LogPrintExit warning "NTP client is not enabled!" true;
 }
 
-:log info ("Updating NTP servers to " . $Ntp1 . " and " . $Ntp2);
+$LogPrintExit info ("Updating NTP servers to " . $Ntp1 . " and " . $Ntp2) false;
 / system ntp client set primary-ntp=$Ntp1 secondary-ntp=$Ntp2;
